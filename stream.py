@@ -14,7 +14,7 @@ def start_stream(url):
     while True:
         if is_stream_active(url):
             # Start the ffplay process with fullscreen, no audio, and minimal latency
-            process = subprocess.Popen(['ffplay', '-fs', '-an', '-fflags', 'nobuffer', '-flags', 'low_delay', '-i', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(['ffplay', '-fs', '-an', '-rtmp_buffer', '500', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
             # Wait for the process to complete
             process.wait()
