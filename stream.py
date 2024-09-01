@@ -27,5 +27,5 @@ def start_stream(url):
             time.sleep(5)
 
 if __name__ == "__main__":
-    stream_url = "rtmp://your_stream_url_here"
+    stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     start_stream(stream_url)
