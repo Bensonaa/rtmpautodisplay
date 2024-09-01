@@ -40,4 +40,6 @@ def start_stream(url, image_path):
 if __name__ == "__main__":
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"  # Replace with the path to your image
+    show_image(image_path)
+    time.sleep(5)
     start_stream(stream_url, image_path)
