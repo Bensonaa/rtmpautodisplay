@@ -1,57 +1,55 @@
 import subprocess
 import time
-import logging
+import os
 
-# Configure logging to output to a file
-try:
-    logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    logging.info("Logging is configured correctly.")
-except Exception as e:
-    print(f"Error configuring logging: {e}")
-
-def is_connectable(url):
+def is_stream_active(url):
     try:
-        ffprobeoutput = subprocess.run(
-            ['ffprobe', '-v', 'error', '-i', url, '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1'],
-            timeout=20, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-        )
-        return ffprobeoutput.returncode == 0
+        result = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+        return result.stdout != b''
     except subprocess.TimeoutExpired:
-        logging.error("ffprobe timed out. Try increasing the probe timeout.")
-        return False
-    except Exception as e:
-        logging.error(f"Error checking stream: {e}")
         return False
 
-def show_image(image_path):
-    subprocess.Popen(['feh', '-F', image_path])
+def is_display_connected(display):
+    try:
+        result = subprocess.run(['tvservice', '-s', display], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return 'HDMI' in result.stdout.decode()
+    except Exception as e:
+        print(f"Error checking display {display}: {e}")
+        return False
+
+def show_image(image_path, hdmi):
+    subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', hdmi, image_path])
 
 def start_stream(url, image_path):
-    process = None
     while True:
-        if is_connectable(url):
-            if process is None or process.poll() is not None:
-                logging.info("Stream is active. Starting ffplay...")
-                subprocess.run(['pkill', 'feh'])
-                process = subprocess.Popen(
-                    ['ffplay', '-fs', '-an', '-buffer_size', '65536', url],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-                )
+        if is_stream_active(url):
+            print("Stream is active. Starting MPV...")
+            subprocess.run(['pkill', 'feh'])
+            
+            # Start the MPV process for HDMI1
+            process_hdmi1 = subprocess.Popen(['mpv', '--fs', '--no-audio', '--drm-connector=HDMI-A-1', url])
+            
+            # Check if HDMI2 is connected before starting the MPV process for HDMI2
+            if is_display_connected('2'):
+                process_hdmi2 = subprocess.Popen(['mpv', '--fs', '--no-audio', '--drm-connector=HDMI-A-2', url])
+                process_hdmi2.wait()
+            
+            process_hdmi1.wait()
+            
+            print("Stream disconnected. Showing image and restarting in 5 seconds...")
+            show_image(image_path, 'hdmi')
+            show_image(image_path, 'hdmi2')
+            time.sleep(5)
         else:
-            if process is not None and process.poll() is None:
-                logging.info("Stream is not active. Killing ffplay process...")
-                process.terminate()
-                process.wait()
-                process = None
-                time.sleep(5)  # Add a delay before restarting
-            logging.info("Showing image and checking again in 10 seconds...")
-            show_image(image_path)
-        
-        time.sleep(10)
+            print("Stream is not active. Showing image and checking again in 5 seconds...")
+            show_image(image_path, 'hdmi')
+            show_image(image_path, 'hdmi2')
+            time.sleep(5)
 
 if __name__ == "__main__":
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
-    show_image(image_path)
+    show_image(image_path, 'hdmi')
+    show_image(image_path, 'hdmi2')
     time.sleep(5)
     start_stream(stream_url, image_path)
