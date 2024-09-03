@@ -29,7 +29,7 @@ def start_stream(url, image_path):
                 log_message("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
                 process = subprocess.Popen(
-                    ['ffplay', '-fs', '-an', '-fflags', 'nobuffer', '-flags', 'low_delay', '-strict', 'experimental', '-rtmp_buffer', '100', url],
+                    ['ffplay', '-fs', '-an', url],
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
                 )
                 threading.Thread(target=freeze_monitor, args=(process,)).start()
