@@ -26,7 +26,7 @@ def start_stream(url, image_path):
             if process is None or process.poll() is not None:
                 print("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
-                process = subprocess.Popen(['ffplay', '-fs', '-an', 'freezedetect=n=0.003:d=2', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                process = subprocess.Popen(['ffplay', '-fs', '-an', '-rtmp_buffer', '200', 'freezedetect=n=0.003:d=2', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 threading.Thread(target=freeze_monitor, args=(process,)).start()
         else:
             if process is not None and process.poll() is None:
