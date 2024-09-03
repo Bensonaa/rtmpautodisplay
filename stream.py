@@ -26,23 +26,16 @@ def start_stream(url, image_path):
             print("Stream is active. Starting ffplay...")
             subprocess.run(['pkill', 'feh'])
             
-            # Check if HDMI1 is connected before starting the ffplay process for HDMI1
-            if is_display_connected('1'):
-                process_hdmi1 = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', url])
-            else:
-                print("No display connected to HDMI1.")
+            processes = []
+            for display in ['1', '2']:
+                if is_display_connected(display):
+                    process = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', url])
+                    processes.append(process)
+                else:
+                    print(f"No display connected to HDMI{display}.")
             
-            # Check if HDMI2 is connected before starting the ffplay process for HDMI2
-            if is_display_connected('2'):
-                process_hdmi2 = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', url])
-            else:
-                print("No display connected to HDMI2.")
-            
-            # Wait for the processes to complete
-            if 'process_hdmi1' in locals():
-                process_hdmi1.wait()
-            if 'process_hdmi2' in locals():
-                process_hdmi2.wait()
+            for process in processes:
+                process.wait()
             
             print("Stream disconnected. Showing image and restarting in 5 seconds...")
             show_image(image_path, 'hdmi')
