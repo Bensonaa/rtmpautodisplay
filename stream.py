@@ -1,5 +1,6 @@
 import subprocess
 import time
+import threading
 
 def is_connectable(url):
     try:
@@ -25,7 +26,8 @@ def start_stream(url, image_path):
             if process is None or process.poll() is not None:
                 print("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
-                process = subprocess.Popen(['ffplay', '-fs', '-an', '-rtmp_buffer', '500', url])
+                process = subprocess.Popen(['ffplay', '-fs', '-an', 'freezedetect=n=0.003:d=2', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                threading.Thread(target=freeze_monitor, args=(process,)).start()
         else:
             if process is not None and process.poll() is None:
                 print("Stream is not active. Killing ffplay process...")
@@ -36,6 +38,19 @@ def start_stream(url, image_path):
             show_image(image_path)
         
         time.sleep(10)
+
+def freeze_monitor(process):
+    while True:
+        output = process.stderr.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            if "freeze_start" in output:
+                process.kill()
+                print("Stream froze. Killing ffplay process and showing image...")
+                show_image(image_path)
+                return
+            print(output.strip())
 
 if __name__ == "__main__":
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
