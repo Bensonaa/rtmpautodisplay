@@ -2,13 +2,18 @@ import subprocess
 import time
 import os
 
-def is_stream_active(url):
+def is_connectable(url):
     try:
-        # Run ffprobe to check the stream status
-        result = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
-        # If ffprobe returns any output, the stream is active
-        return result.stdout != b''
-    except subprocess.TimeoutExpired:
+        ffprobeoutput = subprocess.run(['ffprobe', '-v', 'error', '-i', url, '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1'], timeout=10, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if ffprobeoutput.returncode == 0:
+            return True
+        else:
+            return False
+    except subprocess.TimeoutExpired as e:
+        #logger.error(f"CameraStream: {self.name} {self.obfuscated_credentials_url} Not Connectable (ffprobe timed out, try increasing probe_timeout for this stream), configured timeout: {self.probe_timeout}")
+        return False
+    except Exception as e:
+        #logger.error(f"CameraStream: {self.name} {self.obfuscated_credentials_url} Not Connectable ({erroroutput_newlinesremoved}), configured timeout: {self.probe_timeout}")
         return False
 
 def show_image(image_path):
@@ -17,7 +22,7 @@ def show_image(image_path):
 
 def start_stream(url, image_path):
     while True:
-        if is_stream_active(url):
+        if is_connectable(url):
             print("Stream is active. Starting ffplay...")
             # Kill any existing feh processes
             subprocess.run(['pkill', 'feh'])
