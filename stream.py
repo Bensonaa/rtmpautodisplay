@@ -1,5 +1,9 @@
 import subprocess
 import time
+import logging
+
+# Configure logging to output to a file
+logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def is_connectable(url):
     try:
@@ -9,10 +13,10 @@ def is_connectable(url):
         )
         return ffprobeoutput.returncode == 0
     except subprocess.TimeoutExpired:
-        print("ffprobe timed out. Try increasing the probe timeout.")
+        logging.error("ffprobe timed out. Try increasing the probe timeout.")
         return False
     except Exception as e:
-        print(f"Error checking stream: {e}")
+        logging.error(f"Error checking stream: {e}")
         return False
 
 def show_image(image_path):
@@ -23,7 +27,7 @@ def start_stream(url, image_path):
     while True:
         if is_connectable(url):
             if process is None or process.poll() is not None:
-                print("Stream is active. Starting ffplay...")
+                logging.info("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
                 process = subprocess.Popen(
                     ['ffplay', '-fs', '-an', url],
@@ -31,17 +35,14 @@ def start_stream(url, image_path):
                 )
         else:
             if process is not None and process.poll() is None:
-                print("Stream is not active. Killing ffplay process...")
+                logging.info("Stream is not active. Killing ffplay process...")
                 process.terminate()
                 process.wait()
                 process = None
-            print("Showing image and checking again in 10 seconds...")
+            logging.info("Showing image and checking again in 10 seconds...")
             show_image(image_path)
         
         time.sleep(10)
-
-def log_message(message):
-    print(message)
 
 if __name__ == "__main__":
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
