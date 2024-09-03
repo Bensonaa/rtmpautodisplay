@@ -1,6 +1,7 @@
 import subprocess
 import time
 import os
+import threading
 
 class DisplayManager:
     def __init__(self):
@@ -39,20 +40,36 @@ class StreamManager:
         except subprocess.TimeoutExpired:
             return False
 
+    def detect_freezes(self):
+        command = [
+            'ffmpeg', '-i', self.url, '-vf', 'freezedetect=n=-60dB:d=2',
+            '-map', '0:v:0', '-f', 'null', '-', '2>&1'
+        ]
+        with open('freeze_log.txt', 'w') as log_file:
+            process = subprocess.Popen(command, stdout=log_file, stderr=subprocess.STDOUT)
+            process.communicate()
+
+    def play_stream(self):
+        command = ['ffplay', self.url]
+        process = subprocess.Popen(command)
+        process.communicate()
+
     def start_stream(self):
         while True:
             if self.is_stream_active():
-                print("Stream is active. Starting ffplay...")
+                print("Stream is active. Starting ffplay and freeze detection...")
                 subprocess.run(['pkill', 'feh'])
                 
-                processes = []
-                for display in self.display_manager.connected_displays:
-                    process = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', self.url])
-                    processes.append(process)
-                
-                for process in processes:
-                    process.wait()
-                
+                # Start freeze detection and stream playing in parallel
+                freeze_thread = threading.Thread(target=self.detect_freezes)
+                play_thread = threading.Thread(target=self.play_stream)
+
+                freeze_thread.start()
+                play_thread.start()
+
+                freeze_thread.join()
+                play_thread.join()
+
                 print("Stream disconnected. Showing image and restarting in 5 seconds...")
                 self.display_manager.show_image(self.image_path)
                 time.sleep(5)
