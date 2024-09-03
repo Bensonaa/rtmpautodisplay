@@ -1,6 +1,5 @@
 import subprocess
 import time
-import threading
 
 def is_connectable(url):
     try:
@@ -44,15 +43,9 @@ def start_stream(url, image_path):
 def log_message(message):
     print(message)
 
-def check_connectivity(url):
-    while True:
-        is_connectable(url)
-        time.sleep(10)
-
 if __name__ == "__main__":
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
-    threading.Thread(target=check_connectivity, args=(stream_url,)).start()
     show_image(image_path)
     time.sleep(5)
     start_stream(stream_url, image_path)
