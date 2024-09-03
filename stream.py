@@ -48,15 +48,25 @@ class StreamManager:
         ]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
-        for line in process.stdout:
+        while True:
+            line = process.stdout.readline()
             if b'freeze_start' in line:
                 print("Freeze detected. Terminating ffplay process...")
                 if self.ffplay_process:
                     self.ffplay_process.terminate()
                     break
 
+            # Periodically check if the stream is still active
+            if not self.is_stream_active():
+                print("Stream is not active. Terminating ffplay process...")
+                if self.ffplay_process:
+                    self.ffplay_process.terminate()
+                    break
+
+            time.sleep(10)  # Check every 10 seconds
+
     def play_stream(self):
-        command = ['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', self.url]
+        command = ['ffplay', self.url]
         self.ffplay_process = subprocess.Popen(command)
         self.ffplay_process.communicate()
 
