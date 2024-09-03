@@ -32,6 +32,7 @@ class StreamManager:
         self.url = url
         self.image_path = image_path
         self.display_manager = DisplayManager()
+        self.ffplay_process = None
 
     def is_stream_active(self):
         try:
@@ -45,14 +46,19 @@ class StreamManager:
             'ffmpeg', '-i', self.url, '-vf', 'freezedetect=n=-60dB:d=2',
             '-map', '0:v:0', '-f', 'null', '-', '2>&1'
         ]
-        with open('freeze_log.txt', 'w') as log_file:
-            process = subprocess.Popen(command, stdout=log_file, stderr=subprocess.STDOUT)
-            process.communicate()
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+        for line in process.stdout:
+            if b'freeze_start' in line:
+                print("Freeze detected. Terminating ffplay process...")
+                if self.ffplay_process:
+                    self.ffplay_process.terminate()
+                    break
 
     def play_stream(self):
-        command = ['ffplay', self.url]
-        process = subprocess.Popen(command)
-        process.communicate()
+        command = ['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', self.url]
+        self.ffplay_process = subprocess.Popen(command)
+        self.ffplay_process.communicate()
 
     def start_stream(self):
         while True:
@@ -70,7 +76,7 @@ class StreamManager:
                 freeze_thread.join()
                 play_thread.join()
 
-                print("Stream disconnected. Showing image and restarting in 5 seconds...")
+                print("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
                 self.display_manager.show_image(self.image_path)
                 time.sleep(5)
             else:
