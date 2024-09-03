@@ -66,7 +66,7 @@ class StreamManager:
             time.sleep(10)  # Check every 10 seconds
 
     def play_stream(self):
-        command = ['ffplay', self.url]
+        command = ['ffplay', '-fs', '-an', self.url]
         self.ffplay_process = subprocess.Popen(command)
         self.ffplay_process.communicate()
 
