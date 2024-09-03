@@ -3,7 +3,11 @@ import time
 import logging
 
 # Configure logging to output to a file
-logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+try:
+    logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.info("Logging is configured correctly.")
+except Exception as e:
+    print(f"Error configuring logging: {e}")
 
 def is_connectable(url):
     try:
@@ -30,7 +34,7 @@ def start_stream(url, image_path):
                 logging.info("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
                 process = subprocess.Popen(
-                    ['ffplay', '-fs', '-an', '-rtmp_buffer', '1000', url],
+                    ['ffplay', '-fs', '-an', '-buffer_size', '65536', url],
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
                 )
         else:
