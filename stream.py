@@ -9,7 +9,7 @@ def is_connectable(url):
     try:
         ffprobeoutput = subprocess.run(
             ['ffprobe', '-v', 'error', '-i', url, '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1'],
-            timeout=10, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            timeout=20, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
         return ffprobeoutput.returncode == 0
     except subprocess.TimeoutExpired:
@@ -30,7 +30,7 @@ def start_stream(url, image_path):
                 logging.info("Stream is active. Starting ffplay...")
                 subprocess.run(['pkill', 'feh'])
                 process = subprocess.Popen(
-                    ['ffplay', '-fs', '-an', url],
+                    ['ffplay', '-fs', '-an', '-rtmp_buffer', '1000', url],
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
                 )
         else:
@@ -39,6 +39,7 @@ def start_stream(url, image_path):
                 process.terminate()
                 process.wait()
                 process = None
+                time.sleep(5)  # Add a delay before restarting
             logging.info("Showing image and checking again in 10 seconds...")
             show_image(image_path)
         
