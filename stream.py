@@ -15,12 +15,12 @@ def show_image(image_path, hdmi):
 def start_stream(url, image_path):
     while True:
         if is_stream_active(url):
-            print("Stream is active. Starting GStreamer...")
+            print("Stream is active. Starting ffplay...")
             subprocess.run(['pkill', 'feh'])
             
-            # Start the GStreamer process for both HDMI outputs
-            process_hdmi1 = subprocess.Popen(['gst-launch-1.0', 'rtspsrc', 'location=' + url, '!', 'decodebin', '!', 'videoconvert', '!', 'autovideosink', 'display=HDMI-1'])
-            process_hdmi2 = subprocess.Popen(['gst-launch-1.0', 'rtspsrc', 'location=' + url, '!', 'decodebin', '!', 'videoconvert', '!', 'autovideosink', 'display=HDMI-2'])
+            # Start the ffplay process for both HDMI outputs with hardware acceleration
+            process_hdmi1 = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', url])
+            process_hdmi2 = subprocess.Popen(['ffplay', '-fs', '-an', '-vcodec', 'h264_v4l2m2m', '-i', url])
             
             # Wait for the processes to complete
             process_hdmi1.wait()
