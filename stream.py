@@ -1,7 +1,7 @@
 import subprocess
 import time
-import os
 import threading
+import logging
 
 class DisplayManager:
     def __init__(self):
@@ -9,7 +9,7 @@ class DisplayManager:
 
     def get_connected_displays(self):
         try:
-            result = subprocess.run(['xrandr'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = subprocess.run(['xrandr'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             output = result.stdout.decode()
             connected_displays = []
             
@@ -19,8 +19,8 @@ class DisplayManager:
                     connected_displays.append(display)
             
             return connected_displays
-        except Exception as e:
-            print(f"Error detecting connected displays: {e}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error detecting connected displays: {e}")
             return []
 
     def show_image(self, image_path):
@@ -33,6 +33,7 @@ class StreamManager:
         self.image_path = image_path
         self.display_manager = DisplayManager()
         self.ffplay_process = None
+        self.lock = threading.Lock()
 
     def is_stream_active(self):
         try:
@@ -51,32 +52,33 @@ class StreamManager:
         while True:
             line = process.stdout.readline()
             if b'freeze_start' in line:
-                print("Freeze detected. Terminating ffplay process...")
-                if self.ffplay_process:
-                    self.ffplay_process.terminate()
-                    break
+                logging.info("Freeze detected. Terminating ffplay process...")
+                with self.lock:
+                    if self.ffplay_process:
+                        self.ffplay_process.terminate()
+                        break
 
-            # Periodically check if the stream is still active
             if not self.is_stream_active():
-                print("Stream is not active. Terminating ffplay process...")
-                if self.ffplay_process:
-                    self.ffplay_process.terminate()
-                    break
+                logging.info("Stream is not active. Terminating ffplay process...")
+                with self.lock:
+                    if self.ffplay_process:
+                        self.ffplay_process.terminate()
+                        break
 
-            time.sleep(10)  # Check every 10 seconds
+            time.sleep(10)
 
     def play_stream(self):
         command = ['ffplay', '-fs', '-an', self.url]
-        self.ffplay_process = subprocess.Popen(command)
+        with self.lock:
+            self.ffplay_process = subprocess.Popen(command)
         self.ffplay_process.communicate()
 
     def start_stream(self):
         while True:
             if self.is_stream_active():
-                print("Stream is active. Starting ffplay and freeze detection...")
+                logging.info("Stream is active. Starting ffplay and freeze detection...")
                 subprocess.run(['pkill', 'feh'])
                 
-                # Start freeze detection and stream playing in parallel
                 freeze_thread = threading.Thread(target=self.detect_freezes)
                 play_thread = threading.Thread(target=self.play_stream)
 
@@ -86,21 +88,21 @@ class StreamManager:
                 freeze_thread.join()
                 play_thread.join()
 
-                print("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
+                logging.info("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
                 self.display_manager.show_image(self.image_path)
                 time.sleep(5)
             else:
-                print("Stream is not active. Showing image and checking again in 5 seconds...")
+                logging.info("Stream is not active. Showing image and checking again in 5 seconds...")
                 self.display_manager.show_image(self.image_path)
                 time.sleep(5)
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
     
     display_manager = DisplayManager()
     display_manager.show_image(image_path)
     time.sleep(5)
-    
     stream_manager = StreamManager(stream_url, image_path)
     stream_manager.start_stream()
