@@ -23,14 +23,14 @@ class DisplayManager:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
-    def show_image(self, image_path, display):
-        subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', display, image_path])
+    def show_image(self, image_path):
+        for display in self.connected_displays:
+            subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', display, image_path])
 
 class StreamManager:
-    def __init__(self, url, image_path, display):
+    def __init__(self, url, image_path):
         self.url = url
         self.image_path = image_path
-        self.display = display
         self.display_manager = DisplayManager()
         self.ffplay_process = None
         self.lock = threading.Lock()
@@ -52,14 +52,14 @@ class StreamManager:
         while True:
             line = process.stdout.readline()
             if b'freeze_start' in line:
-                logging.info(f"Freeze detected on {self.display}. Terminating ffplay process...")
+                logging.info("Freeze detected. Terminating ffplay process...")
                 with self.lock:
                     if self.ffplay_process:
                         self.ffplay_process.terminate()
                         break
 
             if not self.is_stream_active():
-                logging.info(f"Stream is not active on {self.display}. Terminating ffplay process...")
+                logging.info("Stream is not active. Terminating ffplay process...")
                 with self.lock:
                     if self.ffplay_process:
                         self.ffplay_process.terminate()
@@ -76,7 +76,7 @@ class StreamManager:
     def start_stream(self):
         while True:
             if self.is_stream_active():
-                logging.info(f"Stream is active on {self.display}. Starting ffplay and freeze detection...")
+                logging.info("Stream is active. Starting ffplay and freeze detection...")
                 subprocess.run(['pkill', 'feh'])
                 
                 freeze_thread = threading.Thread(target=self.detect_freezes)
@@ -88,32 +88,21 @@ class StreamManager:
                 freeze_thread.join()
                 play_thread.join()
 
-                logging.info(f"Stream disconnected or freeze detected on {self.display}. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image(self.image_path, self.display)
+                logging.info("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
+                self.display_manager.show_image(self.image_path)
                 time.sleep(5)
             else:
-                logging.info(f"Stream is not active on {self.display}. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image(self.image_path, self.display)
+                logging.info("Stream is not active. Showing image and checking again in 5 seconds...")
+                self.display_manager.show_image(self.image_path)
                 time.sleep(5)
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='stream_manager.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    
-    stream_url_hdmi1 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    stream_url_hdmi2 = "rtmp://10.0.0.62/bcs/channel1_ext.bcs?channel=1&stream=0&user=admin&password=curling2"  # Change this URL as needed
+    logging.basicConfig(level=logging.INFO)
+    stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
     
     display_manager = DisplayManager()
-    display_manager.show_image(image_path, "HDMI1")
-    if "HDMI2" in display_manager.connected_displays:
-        display_manager.show_image(image_path, "HDMI2")
+    display_manager.show_image(image_path)
     time.sleep(5)
-    
-    stream_manager_hdmi1 = StreamManager(stream_url_hdmi1, image_path, "HDMI1")
-    stream_manager_hdmi1_thread = threading.Thread(target=stream_manager_hdmi1.start_stream)
-    stream_manager_hdmi1_thread.start()
-    
-    if stream_url_hdmi2:
-        stream_manager_hdmi2 = StreamManager(stream_url_hdmi2, image_path, "HDMI2")
-        stream_manager_hdmi2_thread = threading.Thread(target=stream_manager_hdmi2.start_stream)
-        stream_manager_hdmi2_thread.start()
+    stream_manager = StreamManager(stream_url, image_path)
+    stream_manager.start_stream()
