@@ -68,7 +68,7 @@ class StreamManager:
 
             time.sleep(10)
 
-    def play_stream(self, url, display):
+    def play_stream(self, url):
         command = ['ffplay', '-fs', '-an', url]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
@@ -81,10 +81,10 @@ class StreamManager:
                 subprocess.run(['pkill', 'feh'])
                 
                 freeze_thread1 = threading.Thread(target=self.detect_freezes, args=(self.url1, self.ffplay_process1))
-                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 'HDMI1'))
+                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1,))
 
                 freeze_thread2 = threading.Thread(target=self.detect_freezes, args=(self.url2, self.ffplay_process2))
-                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 'HDMI2'))
+                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
 
                 freeze_thread1.start()
                 play_thread1.start()
