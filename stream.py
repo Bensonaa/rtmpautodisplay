@@ -69,7 +69,7 @@ class StreamManager:
             time.sleep(10)
 
     def play_stream(self, url, display):
-        command = ['ffplay', '-fs', '-an', '--display', display, url]
+        command = ['ffplay', '-fs', '-an', url]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
         ffplay_process.communicate()
