@@ -19,7 +19,4 @@ Exec=/usr/bin/python3 /home/pi/rtmpautodisplay/stream.py
 StartupNotify=false
 EOL
 
-# Move the desktop entry to the autostart directory
-mv stream.desktop /home/pi/.config/autostart/
-
 echo "Installation complete. The script will autostart after the Raspbian desktop loads. Please reboot."
