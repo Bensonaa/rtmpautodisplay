@@ -111,7 +111,7 @@ class StreamManager:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     stream_url1 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    stream_url2 = "rtmp://10.0.0.62/bcs/channel1_ext.bcs?channel=1&stream=0&user=admin&password=curling1"
+    stream_url2 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
     
     display_manager = DisplayManager()
