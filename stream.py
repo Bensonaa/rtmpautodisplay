@@ -2,6 +2,7 @@ import subprocess
 import time
 import threading
 import logging
+import yaml
 
 class DisplayManager:
     def __init__(self):
@@ -23,14 +24,14 @@ class DisplayManager:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
-    def show_image(self, image_path):
-        for display in self.connected_displays:
-            subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', display, image_path])
+    def show_image(self, image_path, display):
+        subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', display, image_path])
 
 class StreamManager:
-    def __init__(self, url, image_path):
+    def __init__(self, url, image_path, display):
         self.url = url
         self.image_path = image_path
+        self.display = display
         self.display_manager = DisplayManager()
         self.ffplay_process = None
         self.lock = threading.Lock()
@@ -52,14 +53,14 @@ class StreamManager:
         while True:
             line = process.stdout.readline()
             if b'freeze_start' in line:
-                logging.info("Freeze detected. Terminating ffplay process...")
+                logging.info(f"Freeze detected on {self.display}. Terminating ffplay process...")
                 with self.lock:
                     if self.ffplay_process:
                         self.ffplay_process.terminate()
                         break
 
             if not self.is_stream_active():
-                logging.info("Stream is not active. Terminating ffplay process...")
+                logging.info(f"Stream is not active on {self.display}. Terminating ffplay process...")
                 with self.lock:
                     if self.ffplay_process:
                         self.ffplay_process.terminate()
@@ -76,7 +77,7 @@ class StreamManager:
     def start_stream(self):
         while True:
             if self.is_stream_active():
-                logging.info("Stream is active. Starting ffplay and freeze detection...")
+                logging.info(f"Stream is active on {self.display}. Starting ffplay and freeze detection...")
                 subprocess.run(['pkill', 'feh'])
                 
                 freeze_thread = threading.Thread(target=self.detect_freezes)
@@ -88,21 +89,31 @@ class StreamManager:
                 freeze_thread.join()
                 play_thread.join()
 
-                logging.info("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image(self.image_path)
+                logging.info(f"Stream disconnected or freeze detected on {self.display}. Showing image and restarting in 5 seconds...")
+                self.display_manager.show_image(self.image_path, self.display)
                 time.sleep(5)
             else:
-                logging.info("Stream is not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image(self.image_path)
+                logging.info(f"Stream is not active on {self.display}. Showing image and checking again in 5 seconds...")
+                self.display_manager.show_image(self.image_path, self.display)
                 time.sleep(5)
 
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
+
 if __name__ == "__main__":
-    logging.basicConfig(filename='stream_monitor.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    stream_url = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
+    logging.basicConfig(filename='stream_manager.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    config = load_config('config.yaml')
     
     display_manager = DisplayManager()
-    display_manager.show_image(image_path)
+    
+    for display, settings in config['streams'].items():
+        display_manager.show_image(settings['image_path'], display)
+    
     time.sleep(5)
-    stream_manager = StreamManager(stream_url, image_path)
-    stream_manager.start_stream()
+    
+    for display, settings in config['streams'].items():
+        stream_manager = StreamManager(settings['url'], settings['image_path'], display)
+        stream_manager_thread = threading.Thread(target=stream_manager.start_stream)
+        stream_manager_thread.start()
