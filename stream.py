@@ -2,7 +2,6 @@ import subprocess
 import time
 import threading
 import logging
-import yaml
 
 class DisplayManager:
     def __init__(self):
@@ -19,7 +18,6 @@ class DisplayManager:
                     display = line.split()[0]
                     connected_displays.append(display)
             
-            logging.info(f"Connected displays: {connected_displays}")
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
@@ -98,30 +96,24 @@ class StreamManager:
                 self.display_manager.show_image(self.image_path, self.display)
                 time.sleep(5)
 
-def load_config(config_path):
-    with open(config_path, 'r') as file:
-        return yaml.safe_load(file)
-
 if __name__ == "__main__":
     logging.basicConfig(filename='stream_manager.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    config = load_config('config.yaml')
-    logging.info(f"Loaded config: {config}")
+    stream_url_hdmi1 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url_hdmi2 = "rtmp://10.0.0.62/bcs/channel1_ext.bcs?channel=1&stream=0&user=admin&password=curling2"  # Change this URL as needed
+    image_path = "/home/pi/rpisurv/surveillance/images/connecting.png"
     
     display_manager = DisplayManager()
-    
-    for display, settings in config['streams'].items():
-        if display in display_manager.connected_displays:
-            display_manager.show_image(settings['image_path'], display)
-        else:
-            logging.warning(f"Display {display} not connected.")
-    
+    display_manager.show_image(image_path, "HDMI1")
+    if "HDMI2" in display_manager.connected_displays:
+        display_manager.show_image(image_path, "HDMI2")
     time.sleep(5)
     
-    for display, settings in config['streams'].items():
-        if display in display_manager.connected_displays:
-            stream_manager = StreamManager(settings['url'], settings['image_path'], display)
-            stream_manager_thread = threading.Thread(target=stream_manager.start_stream)
-            stream_manager_thread.start()
-        else:
-            logging.warning(f"Skipping stream for {display} as it is not connected.")
+    stream_manager_hdmi1 = StreamManager(stream_url_hdmi1, image_path, "HDMI1")
+    stream_manager_hdmi1_thread = threading.Thread(target=stream_manager_hdmi1.start_stream)
+    stream_manager_hdmi1_thread.start()
+    
+    if stream_url_hdmi2:
+        stream_manager_hdmi2 = StreamManager(stream_url_hdmi2, image_path, "HDMI2")
+        stream_manager_hdmi2_thread = threading.Thread(target=stream_manager_hdmi2.start_stream)
+        stream_manager_hdmi2_thread.start()
