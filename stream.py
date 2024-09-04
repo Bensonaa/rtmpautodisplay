@@ -25,7 +25,7 @@ class DisplayManager:
 
     def show_image(self, image_path):
         for display in self.connected_displays:
-            subprocess.Popen(['feh', '-F', '--on-top', '--auto-zoom', '--fullscreen', '--display', display, image_path])
+            subprocess.Popen(['feh', '-F', '--auto-zoom', '--fullscreen', display, image_path])
 
 class StreamManager:
     def __init__(self, url, image_path):
