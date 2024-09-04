@@ -19,6 +19,7 @@ class DisplayManager:
                     display = line.split()[0]
                     connected_displays.append(display)
             
+            logging.info(f"Connected displays: {connected_displays}")
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
@@ -105,15 +106,22 @@ if __name__ == "__main__":
     logging.basicConfig(filename='stream_manager.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     config = load_config('config.yaml')
+    logging.info(f"Loaded config: {config}")
     
     display_manager = DisplayManager()
     
     for display, settings in config['streams'].items():
-        display_manager.show_image(settings['image_path'], display)
+        if display in display_manager.connected_displays:
+            display_manager.show_image(settings['image_path'], display)
+        else:
+            logging.warning(f"Display {display} not connected.")
     
     time.sleep(5)
     
     for display, settings in config['streams'].items():
-        stream_manager = StreamManager(settings['url'], settings['image_path'], display)
-        stream_manager_thread = threading.Thread(target=stream_manager.start_stream)
-        stream_manager_thread.start()
+        if display in display_manager.connected_displays:
+            stream_manager = StreamManager(settings['url'], settings['image_path'], display)
+            stream_manager_thread = threading.Thread(target=stream_manager.start_stream)
+            stream_manager_thread.start()
+        else:
+            logging.warning(f"Skipping stream for {display} as it is not connected.")
