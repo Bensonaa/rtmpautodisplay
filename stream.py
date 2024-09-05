@@ -32,8 +32,8 @@ class StreamManager:
         self.url2 = url2
         self.image_path = image_path
         self.display_manager = DisplayManager()
-        self.ffplay_process1 = None
-        self.ffplay_process2 = None
+        self.vlc_process1 = None
+        self.vlc_process2 = None
         self.lock = threading.Lock()
 
     def is_stream_active(self, url):
@@ -43,7 +43,7 @@ class StreamManager:
         except subprocess.TimeoutExpired:
             return False
 
-    def detect_freezes(self, url, ffplay_process):
+    def detect_freezes(self, url, vlc_process):
         command = [
             'ffmpeg', '-i', url, '-vf', 'freezedetect=n=-60dB:d=2',
             '-map', '0:v:0', '-f', 'null', '-', '2>&1'
@@ -53,37 +53,37 @@ class StreamManager:
         while True:
             line = process.stdout.readline()
             if b'freeze_start' in line:
-                logging.info("Freeze detected. Terminating ffplay process...")
+                logging.info("Freeze detected. Terminating VLC process...")
                 with self.lock:
-                    if ffplay_process:
-                        ffplay_process.terminate()
+                    if vlc_process:
+                        vlc_process.terminate()
                         break
 
             if not self.is_stream_active(url):
-                logging.info("Stream is not active. Terminating ffplay process...")
+                logging.info("Stream is not active. Terminating VLC process...")
                 with self.lock:
-                    if ffplay_process:
-                        ffplay_process.terminate()
+                    if vlc_process:
+                        vlc_process.terminate()
                         break
 
             time.sleep(10)
 
     def play_stream(self, url):
-        command = ['ffplay', '-fs', '-an', url]
+        command = ['cvlc', '--fullscreen', '--no-audio', url]
         with self.lock:
-            ffplay_process = subprocess.Popen(command)
-        ffplay_process.communicate()
+            vlc_process = subprocess.Popen(command)
+        vlc_process.communicate()
 
     def start_stream(self):
         while True:
             if self.is_stream_active(self.url1) and self.is_stream_active(self.url2):
-                logging.info("Streams are active. Starting ffplay and freeze detection...")
+                logging.info("Streams are active. Starting VLC and freeze detection...")
                 subprocess.run(['pkill', 'feh'])
                 
-                freeze_thread1 = threading.Thread(target=self.detect_freezes, args=(self.url1, self.ffplay_process1))
+                freeze_thread1 = threading.Thread(target=self.detect_freezes, args=(self.url1, self.vlc_process1))
                 play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1,))
 
-                freeze_thread2 = threading.Thread(target=self.detect_freezes, args=(self.url2, self.ffplay_process2))
+                freeze_thread2 = threading.Thread(target=self.detect_freezes, args=(self.url2, self.vlc_process2))
                 play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
 
                 freeze_thread1.start()
