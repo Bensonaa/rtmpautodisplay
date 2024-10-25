@@ -5,6 +5,7 @@ import logging
 
 class DisplayManager:
     def __init__(self):
+        self.ensure_startx_running()
         self.connected_displays = self.get_connected_displays()
 
     def get_connected_displays(self):
@@ -23,6 +24,18 @@ class DisplayManager:
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
             return []
+
+    def ensure_startx_running(self):
+        try:
+            result = subprocess.run(['pgrep', 'X'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if result.returncode != 0:
+                logging.info("startx is not running. Starting startx...")
+                subprocess.Popen(['startx'])
+                time.sleep(10)  # Wait for startx to initialize
+            else:
+                logging.info("startx is already running.")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error checking startx status: {e}")
 
     def show_image(self, image_path, x, y, width, height):
         subprocess.Popen(['feh', '-F', '--auto-zoom', '--geometry', f'{width}x{height}+{x}+{y}', image_path])
@@ -118,7 +131,7 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    stream_url1 = "rtmp://192.168.1.77/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url1 = "rtmp://192.168.1.70/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = "rtmp://192.168.1.70/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
