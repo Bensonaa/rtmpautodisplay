@@ -24,6 +24,12 @@ class DisplayManager:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
+    def show_image(self, image_path, x, y, width, height):
+        command = [
+            'feh', '--fullscreen', '--auto-zoom', '--geometry', f'{width}x{height}+{x}+{y}', image_path
+        ]
+        subprocess.run(command)
+
 class StreamManager:
     def __init__(self, url1, url2, image_path):
         self.url1 = url1
