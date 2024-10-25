@@ -18,6 +18,7 @@ class DisplayManager:
                     display = line.split()[0]
                     connected_displays.append(display)
             
+            logging.info(f"Found displays {connected_displays}")
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
