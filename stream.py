@@ -5,7 +5,6 @@ import logging
 
 class DisplayManager:
     def __init__(self):
-        self.ensure_startx_running()
         self.connected_displays = self.get_connected_displays()
 
     def get_connected_displays(self):
@@ -24,21 +23,6 @@ class DisplayManager:
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
             return []
-
-    def ensure_startx_running(self):
-        try:
-            result = subprocess.run(['pgrep', 'X'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if result.returncode != 0:
-                logging.info("startx is not running. Starting startx...")
-                subprocess.Popen(['startx'])
-                time.sleep(10)  # Wait for startx to initialize
-            else:
-                logging.info("startx is already running.")
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Error checking startx status: {e}")
-
-    def show_image(self, image_path, x, y, width, height):
-        subprocess.Popen(['feh', '-F', '--auto-zoom', '--geometry', f'{width}x{height}+{x}+{y}', image_path])
 
 class StreamManager:
     def __init__(self, url1, url2, image_path):
