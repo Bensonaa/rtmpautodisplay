@@ -29,7 +29,7 @@ class DisplayManager:
 class StreamManager:
     def __init__(self, url1, url2, image_path):
         self.url1 = url1
-        self.url2 = url2
+        self.url2 = url2 if url2 else None
         self.image_path = image_path
         self.display_manager = DisplayManager()
         self.vlc_process1 = None
@@ -51,29 +51,31 @@ class StreamManager:
         
     def start_stream(self):
         while True:
-            if self.is_stream_active(self.url1) and self.is_stream_active(self.url2):
-                logging.info("Streams are active. Starting VLC...")
+            if self.is_stream_active(self.url1):
+                logging.info("Stream 1 is active. Starting VLC...")
                 subprocess.run(['pkill', 'feh'])
                 play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1,))
-                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
                 play_thread1.start()
-                play_thread2.start()
                 play_thread1.join()
-                play_thread2.join()
-                logging.info("Stream disconnected. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image('HDMI1', self.image_path)
-                self.display_manager.show_image('HDMI2', self.image_path)
-                time.sleep(5)
             else:
-                logging.info("Streams are not active. Showing image and checking again in 5 seconds...")
+                logging.info("Stream 1 is not active. Showing image and checking again in 5 seconds...")
                 self.display_manager.show_image('HDMI1', self.image_path)
+                time.sleep(5)
+                
+            if self.url2 and self.is_stream_active(self.url2):
+                logging.info("Stream 2 is active. Starting VLC...")
+                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
+                play_thread2.start()
+                play_thread2.join()
+            elif self.url2:
+                logging.info("Stream 2 is not active. Showing image and checking again in 5 seconds...")
                 self.display_manager.show_image('HDMI2', self.image_path)
                 time.sleep(5)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     stream_url1 = "rtmp://192.168.1.77/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    stream_url2 = "rtmp://192.168.1.72/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url2 = None  # Replace with the second URL if available
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
     display_manager = DisplayManager()
