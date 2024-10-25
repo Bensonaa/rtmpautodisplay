@@ -51,7 +51,8 @@ class StreamManager:
         command = [
             'cvlc', '--fullscreen', '--no-audio', url,
             '--width', str(width), '--height', str(height),
-            '--video-x', str(x), '--video-y', str(y)
+            '--video-x', str(x), '--video-y', str(y),
+            '--network-caching=300', '--clock-jitter=0', '--clock-synchro=0'
         ]
         with self.lock:
             vlc_process = subprocess.Popen(command)
