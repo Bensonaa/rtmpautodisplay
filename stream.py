@@ -18,14 +18,14 @@ class DisplayManager:
                     display = line.split()[0]
                     connected_displays.append(display)
             
-            logging.error(f"Found displays {connected_displays}")
+            logging.info(f"Found displays: {connected_displays}")
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
-    def show_image(self, display, image_path):
-        subprocess.Popen(['feh', '-F', '--auto-zoom', '--fullscreen', '--display', display, image_path])
+    def show_image(self, image_path, x, y, width, height):
+        subprocess.Popen(['feh', '-F', '--auto-zoom', '--geometry', f'{width}x{height}+{x}+{y}', image_path])
 
 class StreamManager:
     def __init__(self, url1, url2, image_path):
@@ -69,8 +69,8 @@ class StreamManager:
 
             time.sleep(10)
 
-    def play_stream(self, url):
-        command = ['ffplay', '-fs', '-an', url]
+    def play_stream(self, url, x, y, width, height):
+        command = ['ffplay', '-fs', '-an', url, '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y)]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
         ffplay_process.communicate()
@@ -82,10 +82,10 @@ class StreamManager:
                 subprocess.run(['pkill', 'feh'])
                 
                 freeze_thread1 = threading.Thread(target=self.detect_freezes, args=(self.url1, self.ffplay_process1))
-                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1,))
+                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 0, 0, 960, 1080))  # Left half of the screen
 
                 freeze_thread2 = threading.Thread(target=self.detect_freezes, args=(self.url2, self.ffplay_process2))
-                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
+                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 960, 0, 960, 1080))  # Right half of the screen
 
                 freeze_thread1.start()
                 play_thread1.start()
@@ -100,13 +100,13 @@ class StreamManager:
                 play_thread2.join()
 
                 logging.error("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image('HDMI1', self.image_path)
-                self.display_manager.show_image('HDMI2', self.image_path)
+                self.display_manager.show_image(self.image_path, 0, 0, 960, 1080)
+                self.display_manager.show_image(self.image_path, 960, 0, 960, 1080)
                 time.sleep(5)
             else:
                 logging.error("Streams are not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image('HDMI1', self.image_path)
-                self.display_manager.show_image('HDMI2', self.image_path)
+                self.display_manager.show_image(self.image_path, 0, 0, 960, 1080)
+                self.display_manager.show_image(self.image_path, 960, 0, 960, 1080)
                 time.sleep(5)
 
 if __name__ == "__main__":
@@ -123,8 +123,8 @@ if __name__ == "__main__":
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
     display_manager = DisplayManager()
-    display_manager.show_image('HDMI1', image_path)
-    display_manager.show_image('HDMI2', image_path)
+    display_manager.show_image(image_path, 0, 0, 960, 1080)
+    display_manager.show_image(image_path, 960, 0, 960, 1080)
     time.sleep(5)
     stream_manager = StreamManager(stream_url1, stream_url2, image_path)
     stream_manager.start_stream()
