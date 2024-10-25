@@ -110,7 +110,14 @@ class StreamManager:
                 time.sleep(5)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("stream_manager.log"),
+            logging.StreamHandler()
+        ]
+    )
     stream_url1 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
