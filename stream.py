@@ -18,7 +18,7 @@ class DisplayManager:
                     display = line.split()[0]
                     connected_displays.append(display)
             
-            logging.info(f"Found displays {connected_displays}")
+            logging.error(f"Found displays {connected_displays}")
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
@@ -54,14 +54,14 @@ class StreamManager:
         while True:
             line = process.stdout.readline()
             if b'freeze_start' in line:
-                logging.info("Freeze detected. Terminating ffplay process...")
+                logging.error("Freeze detected. Terminating ffplay process...")
                 with self.lock:
                     if ffplay_process:
                         ffplay_process.terminate()
                         break
 
             if not self.is_stream_active(url):
-                logging.info("Stream is not active. Terminating ffplay process...")
+                logging.error("Stream is not active. Terminating ffplay process...")
                 with self.lock:
                     if ffplay_process:
                         ffplay_process.terminate()
@@ -99,12 +99,12 @@ class StreamManager:
                 freeze_thread2.join()
                 play_thread2.join()
 
-                logging.info("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
+                logging.error("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
                 self.display_manager.show_image('HDMI1', self.image_path)
                 self.display_manager.show_image('HDMI2', self.image_path)
                 time.sleep(5)
             else:
-                logging.info("Streams are not active. Showing image and checking again in 5 seconds...")
+                logging.error("Streams are not active. Showing image and checking again in 5 seconds...")
                 self.display_manager.show_image('HDMI1', self.image_path)
                 self.display_manager.show_image('HDMI2', self.image_path)
                 time.sleep(5)
