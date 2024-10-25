@@ -82,10 +82,10 @@ class StreamManager:
                 subprocess.run(['pkill', 'feh'])
                 
                 freeze_thread1 = threading.Thread(target=self.detect_freezes, args=(self.url1, self.ffplay_process1))
-                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 0, 0, 960, 1080))  # Left half of the screen
+                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 0, 0, 1920, 1080))  # Left half of the screen
 
                 freeze_thread2 = threading.Thread(target=self.detect_freezes, args=(self.url2, self.ffplay_process2))
-                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 960, 0, 960, 1080))  # Right half of the screen
+                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 1920, 0, 1920, 1080))  # Right half of the screen
 
                 freeze_thread1.start()
                 play_thread1.start()
@@ -100,13 +100,13 @@ class StreamManager:
                 play_thread2.join()
 
                 logging.error("Stream disconnected or freeze detected. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image(self.image_path, 0, 0, 960, 1080)
-                self.display_manager.show_image(self.image_path, 960, 0, 960, 1080)
+                self.display_manager.show_image(self.image_path, 0, 0, 1920, 1080)
+                self.display_manager.show_image(self.image_path, 1920, 0, 1920, 1080)
                 time.sleep(5)
             else:
                 logging.error("Streams are not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image(self.image_path, 0, 0, 960, 1080)
-                self.display_manager.show_image(self.image_path, 960, 0, 960, 1080)
+                self.display_manager.show_image(self.image_path, 0, 0, 1920, 1080)
+                self.display_manager.show_image(self.image_path, 1920, 0, 1920, 1080)
                 time.sleep(5)
 
 if __name__ == "__main__":
@@ -118,13 +118,13 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    stream_url1 = "rtmp://192.168.1.70/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url1 = "rtmp://192.168.1.75/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = "rtmp://192.168.1.70/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
     display_manager = DisplayManager()
-    display_manager.show_image(image_path, 0, 0, 960, 1080)
-    display_manager.show_image(image_path, 960, 0, 960, 1080)
+    display_manager.show_image(image_path, 0, 0, 1920, 1080)
+    display_manager.show_image(image_path, 1920, 0, 1920, 1080)
     time.sleep(5)
     stream_manager = StreamManager(stream_url1, stream_url2, image_path)
     stream_manager.start_stream()
