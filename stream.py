@@ -1,12 +1,10 @@
 import subprocess
-import time
-import threading
 import logging
 
 class DisplayManager:
     def __init__(self):
         self.connected_displays = self.get_connected_displays()
-        
+
     def get_connected_displays(self):
         try:
             result = subprocess.run(['xrandr'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -17,70 +15,43 @@ class DisplayManager:
                 if ' connected' in line:
                     display = line.split()[0]
                     connected_displays.append(display)
-                    
+            
             return connected_displays
         except subprocess.CalledProcessError as e:
             logging.error(f"Error detecting connected displays: {e}")
             return []
-        
-    def show_image(self, display, image_path):
-        subprocess.Popen(['feh', '-F', '--auto-zoom', '--fullscreen', '--display', display, image_path])
-        
+
 class StreamManager:
-    def __init__(self, url1, url2, image_path):
+    def __init__(self, url1, url2):
         self.url1 = url1
-        self.url2 = url2 if url2 else None
-        self.image_path = image_path
+        self.url2 = url2
         self.display_manager = DisplayManager()
-        self.vlc_process1 = None
-        self.vlc_process2 = None
-        self.lock = threading.Lock()
-        
-    def is_stream_active(self, url):
-        try:
-            result = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
-            return result.stdout != b''
-        except subprocess.TimeoutExpired:
-            return False
-        
-    def play_stream(self, url):
-        command = ['cvlc', '--fullscreen', '--no-audio', url]
-        with self.lock:
-            vlc_process = subprocess.Popen(command)
-        vlc_process.communicate()
-        
-    def start_stream(self):
-        while True:
-            if self.is_stream_active(self.url1):
-                logging.info("Stream 1 is active. Starting VLC...")
-                subprocess.run(['pkill', 'feh'])
-                play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1,))
-                play_thread1.start()
-                play_thread1.join()
-            else:
-                logging.info("Stream 1 is not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image('HDMI1', self.image_path)
-                time.sleep(5)
-                
-            if self.url2 and self.is_stream_active(self.url2):
-                logging.info("Stream 2 is active. Starting VLC...")
-                play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2,))
-                play_thread2.start()
-                play_thread2.join()
-            elif self.url2:
-                logging.info("Stream 2 is not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image('HDMI2', self.image_path)
-                time.sleep(5)
+
+    def play_stream(self, url, display):
+        command = [
+            'cvlc', '--fullscreen', '--no-video-title-show', '--x11-display', display, url
+        ]
+        subprocess.Popen(command)
+
+    def start_streams(self):
+        if 'HDMI1' in self.display_manager.connected_displays and 'HDMI2' in self.display_manager.connected_displays:
+            logging.info("Starting streams on HDMI1 and HDMI2...")
+            self.play_stream(self.url1, ':0.0+HDMI1')
+            self.play_stream(self.url2, ':0.0+HDMI2')
+        else:
+            logging.error("HDMI1 or HDMI2 not connected.")
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    stream_url1 = "rtmp://192.168.1.77/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    stream_url2 = None  # Replace with the second URL if available
-    image_path = "/home/pi/rtmpautodisplay/placeholder.png"
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("stream_manager.log"),
+            logging.StreamHandler()
+        ]
+    )
+    stream_url1 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url2 = "rtmp://10.0.0.62/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     
-    display_manager = DisplayManager()
-    display_manager.show_image('HDMI1', image_path)
-    display_manager.show_image('HDMI2', image_path)
-    time.sleep(5)
-    stream_manager = StreamManager(stream_url1, stream_url2, image_path)
-    stream_manager.start_stream()
+    stream_manager = StreamManager(stream_url1, stream_url2)
+    stream_manager.start_streams()
