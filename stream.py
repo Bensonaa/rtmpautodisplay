@@ -24,12 +24,6 @@ class DisplayManager:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
-    def show_image(self, image_path, x, y, width, height):
-        command = [
-            'feh', '--fullscreen', '--auto-zoom', '--geometry', f'{width}x{height}+{x}+{y}', image_path
-        ]
-        subprocess.run(command)
-
     def close_images(self):
         subprocess.run(['pkill', 'feh'])
 
@@ -74,14 +68,10 @@ class StreamManager:
                 play_thread1.join()
                 play_thread2.join()
 
-                logging.error("Stream disconnected. Showing image and restarting in 5 seconds...")
-                self.display_manager.show_image(self.image_path, 0, 0, 1920, 1080)
-                self.display_manager.show_image(self.image_path, 1920, 0, 1920, 1080)
+                logging.error("Stream disconnected. Restarting in 5 seconds...")
                 time.sleep(5)
             else:
-                logging.error("Streams are not active. Showing image and checking again in 5 seconds...")
-                self.display_manager.show_image(self.image_path, 0, 0, 1920, 1080)
-                self.display_manager.show_image(self.image_path, 1920, 0, 1920, 1080)
+                logging.error("Streams are not active. Checking again in 5 seconds...")
                 time.sleep(5)
 
 if __name__ == "__main__":
@@ -98,8 +88,6 @@ if __name__ == "__main__":
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
     display_manager = DisplayManager()
-    display_manager.show_image(image_path, 0, 0, 1920, 1080)
-    display_manager.show_image(image_path, 1920, 0, 1920, 1080)
     time.sleep(5)
     stream_manager = StreamManager(stream_url1, stream_url2, image_path)
     stream_manager.start_stream()
