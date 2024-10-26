@@ -3,33 +3,11 @@ import time
 import threading
 import logging
 
-class DisplayManager:
-    def __init__(self):
-        self.connected_displays = self.get_connected_displays()
-
-    def get_connected_displays(self):
-        try:
-            result = subprocess.run(['xrandr'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            output = result.stdout.decode()
-            connected_displays = []
-            
-            for line in output.split('\n'):
-                if ' connected' in line:
-                    display = line.split()[0]
-                    connected_displays.append(display)
-            
-            logging.info(f"Found displays: {connected_displays}")
-            return connected_displays
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Error detecting connected displays: {e}")
-            return []
-
 class StreamManager:
     def __init__(self, url1, url2, image_path):
         self.url1 = url1
         self.url2 = url2
         self.image_path = image_path
-        self.display_manager = DisplayManager()
         self.lock = threading.Lock()
 
     def is_stream_active(self, url):
@@ -41,7 +19,7 @@ class StreamManager:
 
     def play_stream(self, url, x, y, width, height):
         command = [
-            'ffplay', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', url
+            'ffplay', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
@@ -83,7 +61,6 @@ if __name__ == "__main__":
     stream_url2 = "rtmp://192.168.1.72/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
-    display_manager = DisplayManager()
     time.sleep(5)
     stream_manager = StreamManager(stream_url1, stream_url2, image_path)
     stream_manager.start_stream()
