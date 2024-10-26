@@ -30,14 +30,15 @@ class DisplayManager:
         ]
         subprocess.run(command)
 
+    def close_images(self):
+        subprocess.run(['pkill', 'feh'])
+
 class StreamManager:
     def __init__(self, url1, url2, image_path):
         self.url1 = url1
         self.url2 = url2
         self.image_path = image_path
         self.display_manager = DisplayManager()
-        self.vlc_process1 = None
-        self.vlc_process2 = None
         self.lock = threading.Lock()
 
     def is_stream_active(self, url):
@@ -49,20 +50,20 @@ class StreamManager:
 
     def play_stream(self, url, x, y, width, height):
         command = [
-            'cvlc', '--fullscreen', '--no-audio', url,
-            '--width', str(width), '--height', str(height),
-            '--video-x', str(x), '--video-y', str(y),
-            '--network-caching=300', '--clock-jitter=0', '--clock-synchro=0'
+            'ffplay', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', url
         ]
         with self.lock:
-            vlc_process = subprocess.Popen(command)
-        vlc_process.communicate()
+            ffplay_process = subprocess.Popen(command)
+        try:
+            ffplay_process.communicate()
+        finally:
+            ffplay_process.terminate()
 
     def start_stream(self):
         while True:
             if self.is_stream_active(self.url1) and self.is_stream_active(self.url2):
-                logging.info("Streams are active. Starting VLC...")
-                subprocess.run(['pkill', 'feh'])
+                logging.info("Streams are active. Starting ffplay...")
+                self.display_manager.close_images()
                 
                 play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 0, 0, 1920, 1080))  # Left half of the screen
                 play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 1920, 0, 1920, 1080))  # Right half of the screen
