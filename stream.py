@@ -24,9 +24,6 @@ class DisplayManager:
             logging.error(f"Error detecting connected displays: {e}")
             return []
 
-    def close_images(self):
-        subprocess.run(['pkill', 'feh'])
-
 class StreamManager:
     def __init__(self, url1, url2, image_path):
         self.url1 = url1
@@ -57,7 +54,6 @@ class StreamManager:
         while True:
             if self.is_stream_active(self.url1) and self.is_stream_active(self.url2):
                 logging.info("Streams are active. Starting ffplay...")
-                self.display_manager.close_images()
                 
                 play_thread1 = threading.Thread(target=self.play_stream, args=(self.url1, 0, 0, 1920, 1080))  # Left half of the screen
                 play_thread2 = threading.Thread(target=self.play_stream, args=(self.url2, 1920, 0, 1920, 1080))  # Right half of the screen
