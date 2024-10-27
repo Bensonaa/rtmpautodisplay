@@ -15,16 +15,22 @@ class StreamManager:
             result = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
             return result.stdout != b''
         except subprocess.TimeoutExpired:
+            logging.error(f"Timeout expired while checking stream: {url}")
+            return False
+        except Exception as e:
+            logging.error(f"Error checking stream {url}: {e}")
             return False
 
     def play_stream(self, url, x, y, width, height):
         command = [
-            'ffplay', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', url
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
         try:
             ffplay_process.communicate()
+        except Exception as e:
+            logging.error(f"Error playing stream {url}: {e}")
         finally:
             ffplay_process.terminate()
 
