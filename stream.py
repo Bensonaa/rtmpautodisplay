@@ -49,7 +49,7 @@ class StreamManager:
                         self.ffplay_processes.remove(process)
                 except psutil.NoSuchProcess:
                     self.ffplay_processes.remove(process)
-            time.sleep(5)
+            time.sleep(60)
 
     def start_stream(self):
         monitor_thread = threading.Thread(target=self.monitor_cpu_usage)
@@ -69,7 +69,7 @@ class StreamManager:
                 play_thread2.join()
 
                 logging.error("Stream disconnected. Restarting in 5 seconds...")
-                time.sleep(5)
+                time.sleep(60)
             else:
                 logging.error("Streams are not active. Checking again in 5 seconds...")
                 time.sleep(5)
