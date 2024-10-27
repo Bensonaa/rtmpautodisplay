@@ -2,6 +2,7 @@ import subprocess
 import time
 import threading
 import logging
+import psutil
 
 class StreamManager:
     def __init__(self, url1, url2, image_path):
@@ -9,6 +10,7 @@ class StreamManager:
         self.url2 = url2
         self.image_path = image_path
         self.lock = threading.Lock()
+        self.ffplay_processes = []
 
     def is_stream_active(self, url):
         try:
@@ -27,6 +29,7 @@ class StreamManager:
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
+            self.ffplay_processes.append(ffplay_process)
         try:
             ffplay_process.communicate()
         except Exception as e:
@@ -34,7 +37,24 @@ class StreamManager:
         finally:
             ffplay_process.terminate()
 
+    def monitor_cpu_usage(self):
+        while True:
+            for process in self.ffplay_processes:
+                try:
+                    p = psutil.Process(process.pid)
+                    cpu_usage = p.cpu_percent(interval=1)
+                    if cpu_usage < 5:  # Threshold for CPU usage
+                        logging.warning(f"Low CPU usage detected for process {process.pid}. Restarting stream...")
+                        process.terminate()
+                        self.ffplay_processes.remove(process)
+                except psutil.NoSuchProcess:
+                    self.ffplay_processes.remove(process)
+            time.sleep(5)
+
     def start_stream(self):
+        monitor_thread = threading.Thread(target=self.monitor_cpu_usage)
+        monitor_thread.start()
+
         while True:
             if self.is_stream_active(self.url1) and self.is_stream_active(self.url2):
                 logging.info("Streams are active. Starting ffplay...")
