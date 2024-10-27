@@ -83,8 +83,8 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    stream_url1 = "rtmp://192.168.1.77/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
-    stream_url2 = "rtmp://192.168.1.72/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url1 = "rtmp://192.168.1.70/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url2 = "rtmp://192.168.1.75/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     
     time.sleep(5)
