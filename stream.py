@@ -120,7 +120,7 @@ if __name__ == "__main__":
     stream_url2 = None
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     youtube_url1 = "rtmp://a.rtmp.youtube.com/live2"
-    youtube_key1 = "YOUR_YOUTUBE_STREAM_KEY_1"
+    youtube_key1 = "j0wj-avz3-h7ar-wqhd-2bvd"
     youtube_url2 = None
     youtube_key2 = None
     
