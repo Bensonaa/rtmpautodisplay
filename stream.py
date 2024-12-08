@@ -29,7 +29,7 @@ class StreamManager:
 
     def play_stream(self, url, x, y, width, height):
         command = [
-            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', url
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
@@ -119,8 +119,8 @@ if __name__ == "__main__":
     stream_url1 = "rtmp://192.168.1.74/bcs/channel0_sub.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = None
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
-    youtube_url1 = "rtmp://a.rtmp.youtube.com/live2"
-    youtube_key1 = "jmtw-cxrc-pb1e-jec8-9ap5"
+    youtube_url1 = None #"rtmp://a.rtmp.youtube.com/live2"
+    youtube_key1 = None #"jmtw-cxrc-pb1e-jec8-9ap5"
     youtube_url2 = None
     youtube_key2 = None
     
