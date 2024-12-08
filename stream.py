@@ -52,7 +52,7 @@ class StreamManager:
             '-bufsize', '6000k', 
             '-pix_fmt', 'yuv420p', 
             '-g', '50', 
-            '-an',  # Exclude audio
+            #'-an',  # Exclude audio
             '-f', 'flv', f'{youtube_url}/{youtube_key}'
         ]
         with self.lock:
