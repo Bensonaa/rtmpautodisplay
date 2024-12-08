@@ -28,14 +28,14 @@ class StreamManager:
             return False
 
     def play_stream(self, url, x, y, width, height):
-        command = [
-            'vlc', '--no-audio', '--video-x', str(x), '--video-y', str(y), '--width', str(width), 
-            '--height', str(height), '--no-video-deco', '--quiet', '--network-caching=1000', url
-        ]
-        
         #command = [
-        #    'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
+        #    'vlc', '--no-audio', '--video-x', str(x), '--video-y', str(y), '--width', str(width), 
+        #    '--height', str(height), '--no-video-deco', '--quiet', '--network-caching=1000', url
         #]
+        
+        command = [
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
+        ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
             self.ffplay_processes.append(ffplay_process)
@@ -49,7 +49,7 @@ class StreamManager:
 
     def stream_to_youtube(self, input_url, youtube_url, youtube_key):
         command = [
-            'ffmpeg', '-i', input_url, '-c:v', 'h264_v4l2m2m', '-preset', 'ultrafast', '-maxrate', '2000k', '-bufsize', '6000k', '-pix_fmt', 'yuv420p', '-g', '50', '-c:a', 'aac', '-ar', '44100', '-f', 'flv', f'{youtube_url}/{youtube_key}'
+            'ffmpeg', '-i', input_url, '-c:v', 'h264_v4l2m2m', '-preset', 'ultrafast', '-maxrate', '2000k', '-bufsize', '6000k', '-pix_fmt', 'yuv420p', '-g', '50', '-an', '-f', 'flv', f'{youtube_url}/{youtube_key}'
         ]
         with self.lock:
             ffmpeg_process = subprocess.Popen(command)
@@ -124,8 +124,8 @@ if __name__ == "__main__":
     stream_url1 = "rtmp://192.168.1.74/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = None
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
-    youtube_url1 = None #"rtmp://a.rtmp.youtube.com/live2"
-    youtube_key1 = None #"jmtw-cxrc-pb1e-jec8-9ap5"
+    youtube_url1 = "rtmp://a.rtmp.youtube.com/live2"
+    youtube_key1 = "jmtw-cxrc-pb1e-jec8-9ap5"
     youtube_url2 = None
     youtube_key2 = None
     
