@@ -29,8 +29,13 @@ class StreamManager:
 
     def play_stream(self, url, x, y, width, height):
         command = [
-            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
+            'vlc', '--no-audio', '--video-x', str(x), '--video-y', str(y), '--width', str(width), 
+            '--height', str(height), '--no-video-deco', '--quiet', '--network-caching=1000', url
         ]
+        
+        #command = [
+        #    'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
+        #]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
             self.ffplay_processes.append(ffplay_process)
