@@ -49,7 +49,7 @@ class StreamManager:
 
     def stream_to_youtube(self, input_url, youtube_url, youtube_key):
         command = [
-            'ffmpeg', '-i', input_url, '-c:v', 'h264_v4l2m2m', '-preset', 'ultrafast', '-maxrate', '2000k', '-bufsize', '6000k', '-pix_fmt', 'yuv420p', '-g', '50', '-an', '-f', 'flv', f'{youtube_url}/{youtube_key}'
+            'ffmpeg', '-i', input_url, '-c:v', 'h264_v4l2m2m', '-preset', 'ultrafast', '-maxrate', '2000k', '-bufsize', '6000k', '-pix_fmt', 'yuv420p', '-g', '50', '-f', 'flv', f'{youtube_url}/{youtube_key}'
         ]
         with self.lock:
             ffmpeg_process = subprocess.Popen(command)
