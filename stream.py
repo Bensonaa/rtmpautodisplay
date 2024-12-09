@@ -34,7 +34,7 @@ class StreamManager:
         #]
         
         command = [
-            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-r', '12', '-an', url
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', '-r', '12', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
@@ -58,7 +58,7 @@ class StreamManager:
             '-g', '50', 
             '-c:a', 'aac', 
             '-ar', '44100',
-            '-r', '12',
+            '-r', '10',
             '-f', 'flv', f'{youtube_url}/{youtube_key}' ]
         with self.lock:
             ffmpeg_process = subprocess.Popen(command)
