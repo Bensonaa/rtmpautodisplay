@@ -53,7 +53,7 @@ class StreamManager:
             '-c:v', 'h264_v4l2m2m', 
             '-preset', 'ultrafast', 
             '-maxrate', '1000k', 
-            '-bufsize', '6000k', 
+            '-bufsize', '12000k', 
             '-pix_fmt', 'yuv420p', 
             '-g', '50', 
             '-c:a', 'aac', 
