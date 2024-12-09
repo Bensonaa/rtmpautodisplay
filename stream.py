@@ -34,7 +34,7 @@ class StreamManager:
         #]
         
         command = [
-            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-r', '12', '-an', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    stream_url1 = "rtmp://192.168.1.74/bcs/channel0_sub.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url1 = "rtmp://192.168.1.74/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = None
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     youtube_url1 = "rtmp://a.rtmp.youtube.com/live2"
