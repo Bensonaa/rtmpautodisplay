@@ -51,7 +51,7 @@ class StreamManager:
         command = [ 
             'ffmpeg', '-i', input_url, 
             '-c:v', 'h264_v4l2m2m', 
-            '-preset', 'ultrafast', 
+            '-preset', 'veryfast', 
             '-maxrate', '1000k', 
             '-bufsize', '12000k', 
             '-pix_fmt', 'yuv420p', 
