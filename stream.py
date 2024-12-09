@@ -50,9 +50,9 @@ class StreamManager:
     def stream_to_youtube(self, input_url, youtube_url, youtube_key):
         command = [ 
             'ffmpeg', '-i', input_url, 
-            #'-c:v', 'h264_v4l2m2m', 
+            '-c:v', 'h264_v4l2m2m', 
             #'-preset', 'veryfast', 
-            '-maxrate', '2000k', 
+            #'-maxrate', '2000k', 
             #'-bufsize', '12000k', 
             '-pix_fmt', 'yuv420p', 
             '-g', '50', 
