@@ -49,9 +49,10 @@ class StreamManager:
 
     def stream_to_youtube(self, input_url, youtube_url, youtube_key):
         command = [ 
-            'ffmpeg', '-i', "rtsp://admin:curling1@192.168.1.74:554/h264Preview_01_main",
-            '-vf', 'scale=854x480',
-            '-c:v', 'h264_v4l2m2m', 
+            'ffmpeg', '-i', "rtsp://admin:curling1@192.168.1.74:554/h264Preview_01_sub",
+            #'-vf', 'scale=854x480',
+            '-c:v', 'h264_v4l2m2m',
+            '-b:v', '1M',
             '-preset', 'ultrafast', 
             #'-maxrate', '2000k', 
             #'-bufsize', '12000k', 
