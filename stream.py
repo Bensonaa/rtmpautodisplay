@@ -78,7 +78,7 @@ class StreamManager:
                     try:
                         p = psutil.Process(process.pid)
                         cpu_usage = p.cpu_percent(interval=1)
-                        if cpu_usage < 5:  # Threshold for CPU usage
+                        if cpu_usage < 3:  # Threshold for CPU usage
                             logging.warning(f"Low CPU usage detected for process {process.pid}. Restarting stream...")
                             process.terminate()
                             process.wait()
