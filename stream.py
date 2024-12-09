@@ -58,7 +58,7 @@ class StreamManager:
             '-g', '50', 
             '-c:a', 'aac', 
             '-ar', '44100',
-            '-r', '12'
+            '-r', '12',
             '-f', 'flv', f'{youtube_url}/{youtube_key}' ]
         with self.lock:
             ffmpeg_process = subprocess.Popen(command)
