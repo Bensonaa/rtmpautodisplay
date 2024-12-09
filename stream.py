@@ -130,11 +130,11 @@ if __name__ == "__main__":
             logging.StreamHandler()
         ]
     )
-    stream_url1 = "rtmp://192.168.1.74/bcs/channel0_ext.bcs?channel=0&stream=0&user=admin&password=curling1"
+    stream_url1 = "rtmp://192.168.1.74/bcs/channel0_sub.bcs?channel=0&stream=0&user=admin&password=curling1"
     stream_url2 = None
     image_path = "/home/pi/rtmpautodisplay/placeholder.png"
     youtube_url1 = "rtmp://a.rtmp.youtube.com/live2"
-    youtube_key1 = "jmtw-cxrc-pb1e-jec8-9ap5"
+    youtube_key1 = "718z-srz1-rmhb-ge1e-0dmx"
     youtube_url2 = None
     youtube_key2 = None
     
