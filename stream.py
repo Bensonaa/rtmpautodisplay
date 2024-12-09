@@ -34,7 +34,7 @@ class StreamManager:
         #]
         
         command = [
-            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', '-r', '12', url
+            'ffplay', '-vcodec', 'h264_v4l2m2m', '-x', str(width), '-y', str(height), '-left', str(x), '-top', str(y), '-noborder', '-loglevel', 'quiet', '-sync', 'ext', '-an', url
         ]
         with self.lock:
             ffplay_process = subprocess.Popen(command)
