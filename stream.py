@@ -48,20 +48,27 @@ class StreamManager:
             ffplay_process.wait()
 
     def stream_to_youtube(self, input_url, youtube_url, youtube_key):
-        command = [ 
-            'ffmpeg', '-i', "rtsp://admin:curling1@192.168.1.74:554/h264Preview_01_sub",
-            #'-vf', 'scale=854x480',
-            '-c:v', 'h264_v4l2m2m',
-            '-b:v', '1M',
-            '-preset', 'ultrafast', 
-            #'-maxrate', '2000k', 
-            #'-bufsize', '12000k', 
-            '-pix_fmt', 'yuv420p', 
-            '-g', '50', 
-            '-c:a', 'aac', 
-            '-ar', '44100',
+        command = [
+            "vlc", "-I", "dummy", "rtsp://admin:curling1@192.168.1.74:554/h264Preview_01_sub",
+            "--avcodec-hw=any",
+            "--sout", "#transcode{vcodec=h264,vb=500,scale=Auto,acodec=mp4a,ab=128,channels=2,samplerate=44100}:std{access=rtmp,mux=ffmpeg{mux=flv},dst=rtmp://a.rtmp.youtube.com/live2/718z-srz1-rmhb-ge1e-0dmx}",
+            "--file-caching=3000"
+        ]
+        
+        #command = [ 
+        #    'ffmpeg', '-i', "rtsp://admin:curling1@192.168.1.74:554/h264Preview_01_sub",
+        #    #'-vf', 'scale=854x480',
+        #    '-c:v', 'h264_v4l2m2m',
+        #    '-b:v', '1M',
+        #    '-preset', 'ultrafast', 
+         #   #'-maxrate', '2000k', 
+         #   #'-bufsize', '12000k', 
+          #  '-pix_fmt', 'yuv420p', 
+          #  '-g', '50', 
+          #  '-c:a', 'aac', 
+           # '-ar', '44100',
             #'-r', '30',
-            '-f', 'flv', f'{youtube_url}/{youtube_key}' ]
+           # '-f', 'flv', f'{youtube_url}/{youtube_key}' ]
         with self.lock:
             ffmpeg_process = subprocess.Popen(command)
             self.ffplay_processes.append(ffmpeg_process)
