@@ -37,14 +37,15 @@ class StreamManager:
         """
         command = [
             'ffplay', 
-            '-vcodec', 'h264_v4l2m2m',  # Hardware decoding for RPi
+            '-vcodec', 'h264_v4l2m2m', 
+            '-rtsp_transport', 'tcp',  # <--- ADD THIS LINE
             '-x', str(width), 
             '-y', str(height), 
             '-left', str(x), 
             '-top', str(y), 
             '-noborder', 
             '-loglevel', 'quiet', 
-            '-sync', 'ext',  # Helps A/V sync on network streams
+            '-sync', 'ext',  
             url
         ]
         
